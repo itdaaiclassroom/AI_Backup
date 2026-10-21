@@ -1,39 +1,53 @@
 # Class 10 Social Studies RAG Tutor
 
-RAG-based tutor for 10th class Social Studies: answers from the textbook only, plus 5 YouTube and 5 e-resource references per topic.
+An AI-assisted study companion for Class 10 Social Studies. The tutor uses retrieval-augmented generation (RAG) to ground answers in the prescribed textbook, helping students explore topics while staying close to the source material.
 
-## Setup
+## What It Does
 
-### 1. Backend (Python)
+- Answers study questions using textbook-backed retrieval
+- Supports optional chapter and syllabus-period context
+- Generates topic-related YouTube and e-resource suggestions
+- Exposes a FastAPI backend with a React frontend
+- Provides an administrative endpoint for rebuilding the document index
 
-```bash
-cd d:\AI
-python -m venv venv
-venv\Scripts\activate
-pip install -r backend\requirements.txt
+## Architecture
+
+```
+React frontend → FastAPI service → local vector index → prescribed textbook
+                         └──────→ Ollama language model
 ```
 
-- Place **Social_textbook_10.pdf** in the project root (`d:\AI\`).
-- Build the vector index (one-time, or after changing the PDF):
+## Tech Stack
 
-  ```bash
-  python -m backend.scripts.build_index
-  ```
+Python · FastAPI · RAG · Ollama · React · Vite
 
-- Run [Ollama](https://ollama.ai/) locally and pull a model:
+## Run Locally
 
-  ```bash
-  ollama pull llama3
-  ollama serve   # if not already running
-  ```
+### Prerequisites
 
-- Start the API:
+- Python 3.10+
+- Node.js 18+
+- [Ollama](https://ollama.com/)
+- A local copy of the prescribed Social Studies textbook PDF
 
-  ```bash
-  uvicorn backend.main:app --reload --host 0.0.0.0 --port 8001
-  ```
+### Backend
 
-### 2. Frontend (React)
+```bash
+python -m venv venv
+# macOS/Linux
+source venv/bin/activate
+# Windows
+# venv\Scripts\activate
+
+pip install -r backend/requirements.txt
+ollama pull llama3
+python -m backend.scripts.build_index
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8001
+```
+
+Place `Social_textbook_10.pdf` in the project root before building the index.
+
+### Frontend
 
 ```bash
 cd frontend
@@ -41,33 +55,34 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The app proxies `/api` and `/health` to the backend (port 8000).
-
-## Features
-
-- **AI Chatbot**: Ask questions; answers are based only on the textbook (RAG). Optionally restrict by chapter/period from the syllabus.
-- **Reference Helper**: Enter a topic (or use the last chatbot question); get 5 YouTube links (direct watch URLs) and 5 e-resources (articles, notes).
+The development client proxies API requests to the local backend.
 
 ## API
 
-- `GET /health` — health check
-- `GET /api/chapters` — list of chapters (syllabus)
-- `POST /api/chat` — body: `{ "question", "chapter_id?", "period_id?" }` → answer + sources
-- `POST /api/references` — body: `{ "question", "chapter_id?", "period_id?" }` → `{ "youtube": [...], "resources": [...] }`
-- `POST /admin/rebuild_index` — rebuild vector index from the PDF
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Service health check |
+| `GET /api/chapters` | Available syllabus chapters |
+| `POST /api/chat` | Textbook-grounded answer with sources |
+| `POST /api/references` | Topic-related video and web resources |
+| `POST /admin/rebuild_index` | Rebuild the textbook index |
 
-## Optional: API keys for faster, higher quality references
+## Optional API Keys
 
-Set these environment variables before running the backend (PowerShell example):
+Set these environment variables to improve reference retrieval:
 
-```powershell
-$env:YOUTUBE_API_KEY="your_youtube_data_api_key"
-$env:GOOGLE_API_KEY="your_google_api_key"
-$env:GOOGLE_CSE_ID="your_programmable_search_engine_id"
-# or SerpAPI as an alternative:
-$env:SERPAPI_KEY="your_serpapi_key"
+```env
+YOUTUBE_API_KEY=...
+GOOGLE_API_KEY=...
+GOOGLE_CSE_ID=...
+# or
+SERPAPI_KEY=...
 ```
 
-Provider order:
-- YouTube references: YouTube Data API → SerpAPI → ddgs fallback
-- E-resources: Google Custom Search → SerpAPI → ddgs fallback
+## Note on Responsible Use
+
+This tool is designed to support learning, not replace teacher guidance or textbook reading. Verify important answers against the prescribed material.
+
+## License
+
+No license has been specified. All rights reserved unless the repository owner states otherwise.
